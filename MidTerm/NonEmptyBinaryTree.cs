@@ -61,6 +61,17 @@ namespace MidTerm
 			return child;
 		}
 
+		Side getChildSide(BinaryTree<T> child)
+		{
+			if (leftSubTree == child)
+				return Side.LEFT;
+
+			if (rightSubTree == child)
+				return Side.RIGHT;
+
+			return null;
+		}
+
 		public IEnumerator GetEnumerator()
 		{
 			return null;
@@ -80,54 +91,6 @@ namespace MidTerm
 				return this;
 
 			return null; // value not found
-		}
-
-		ResultAndParent SearchKeyAndParent(T key)
-		{
-			return this.SearchParentOfAux (key, null);
-		}
-
-		struct ResultAndParent {
-			public readonly BinaryTree<T> result;
-			public readonly BinaryTree<T> parent;
-
-			public ResultAndParent(BinaryTree<T> result, BinaryTree<T> parent)
-			{
-				this.result = result;
-				this.parent = parent;
-			}
-		}
-
-		ResultAndParent SearchParentOfAux(T key, BinaryTree<T> lastParent)
-		{
-			int compareResult = key.CompareTo (this.value);
-
-			if (compareResult == 0)
-				return new ResultAndParent(this, lastParent);
-			
-			if (compareResult < 0 && leftSubTree != null)
-				return leftSubTree.SearchParentOfAux (key, this);
-
-			if (compareResult > 0 && rightSubTree != null)
-				return rightSubTree.SearchParentOfAux (key, this);
-
-			return null;
-		}
-
-		bool isChildOf(BinaryTree<T> parent)
-		{
-			return this == parent.leftSubTree || this = parent.rightSubTree;
-		}
-
-		Side getChildSide(BinaryTree<T> child)
-		{
-			if (leftSubTree == child)
-				return Side.LEFT;
-
-			if (rightSubTree == child)
-				return Side.RIGHT;
-
-			return null;
 		}
 
 		public BinaryTree<T> GetMinimum() 
@@ -173,57 +136,52 @@ namespace MidTerm
 		protected BinaryTree<T> InsertAux(T newValue, Side side)
 		{
 			if (getChild (side) != null)
-				return getChild (side).Insert (newValue);
+				return this.getChild(side).Insert(newValue);
 			
-			setChild (side, new BinaryTree<T> (newValue, null, null));
+			this.setChild (side, new BinaryTree<T> (newValue, null, null));
+
 			return this;
-		}
-
-		BinaryTree<T> DeleteSearch(T key, BinaryTree<T> parent)
-		{
-			int compareResult = key.CompareTo (this.value);
-
-			if (compareResult == 0)
-				return parent.DeleteChild (parent.getChildSide (this));
-
-			if (compareResult < 0 && leftSubTree != null)
-				return leftSubTree.DeleteSearch (key, this);
-
-			if (compareResult > 0 && rightSubTree != null)
-				return rightSubTree.DeleteSearch (key, this);
-
-			return null;
-		}
-
-		BinaryTree<T> DeleteChild(Side sideOfChildToDelete)
-		{
-			BinaryTree<T> toDelete = this.getChild (sideOfChildToDelete);
-
-			if (toDelete.leftSubTree == null)
-				return this.setChild (sideOfChildToDelete, toDelete.rightSubTree);
-
-			if (toDelete.rightSubTree == null)
-				return this.setChild (sideOfChildToDelete, toDelete.leftSubTree);
-
-			BinaryTree<T> replacementOfDeleted = toDelete.rightSubTree.GetMinimum ();
-
-			if (
 		}
 
 		public BinaryTree<T> Delete(T key)
 		{
-			ResultAndParent searchRes = SearchKeyAndParent (key);
+			int compareResult = key.CompareTo (this.value);
 
-			BinaryTree<T> toDelete = searchRes.result;
-			BinaryTree<T> parentOfDeleted = searchRes.parent;
+			if (compareResult == 0)
+				return this.DeleteMyValue ();
 
-			if (toDelete.leftSubTree == null)
-				parentOfDeleted.setChild( parentOfDeleted.ge
-				
+			if (leftSubTree == null && rightSubTree == null)
+				return null;
 
-			return null;
+			if (compareResult < 0 && leftSubTree != null) 
+				this.leftSubTree = leftSubTree.Delete (key);
+
+			if (compareResult > 0 && rightSubTree != null) 
+				this.rightSubTree = rightSubTree.Delete (key);
+
+			return this;
 		}
-			
+
+		protected BinaryTree<T> DeleteMyValue()
+		{
+			if (this.leftSubTree == null)
+				return this.rightSubTree;
+
+			if (this.rightSubTree == null)
+				return this.leftSubTree;
+
+			BinaryTree<T> replacementOfDeleted = this.rightSubTree.GetMinimum ();
+
+			// copy the key to be substituted
+			BinaryTree<T> result = new BinaryTree<T> (replacementOfDeleted.value, 
+								                       this.leftSubTree, 
+														this.rightSubTree);
+
+			// delete recursively the key used for the substitutio from the right subtree
+			result.rightSubTree.Delete (replacementOfDeleted.value);
+
+			return result;
+		}
 	}
 }
 
